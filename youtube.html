@@ -39,6 +39,8 @@
         controls:       0,
         rel:            0,
         modestbranding: 1,
+        iv_load_policy: 3,   // no annotations
+        showinfo:       0,   // no title/info overlay
         playsinline:    1,
         start:          startAt,
         origin:         location.origin
@@ -48,6 +50,12 @@
           ready = true;
           e.target.setVolume(startVol);
           e.target.playVideo();
+        },
+        onStateChange: function (e) {
+          // 0 = ENDED. Signal Lua (gmod.ended is injected via DHTML:AddFunction).
+          if (e.data === YT.PlayerState.ENDED) {
+            if (window.gmod && window.gmod.ended) gmod.ended();
+          }
         }
       }
     });
