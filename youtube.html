@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>DT Media Player</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #000; overflow: hidden; width: 100%; height: 100%; }
+  #player { width: 100vw; height: 100vh; }
+</style>
+</head>
+<body>
+<div id="player"></div>
+<script>
+  // Read query params: ?v=VIDEOID&vol=0-100&start=seconds
+  function qp(name) {
+    var m = location.search.match(new RegExp('[?&]' + name + '=([^&]+)'));
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  var videoId  = qp('v') || '';
+  var startVol = parseInt(qp('vol') || '80', 10);
+  var startAt  = parseInt(qp('start') || '0', 10);
+
+  var player;
+  var ready = false;
+
+  // Load the YouTube IFrame Player API
+  var tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
+
+  function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+      width:  '100%',
+      height: '100%',
+      videoId: videoId,
+      playerVars: {
+        autoplay:       1,
+        controls:       0,
+        rel:            0,
+        modestbranding: 1,
+        playsinline:    1,
+        start:          startAt,
+        origin:         location.origin
+      },
+      events: {
+        onReady: function (e) {
+          ready = true;
+          e.target.setVolume(startVol);
+          e.target.playVideo();
+        }
+      }
+    });
+  }
+
+  // Functions called from Lua via DHTML:QueueJavascript
+  window.gmodSetVolume = function (v) { if (ready && player) player.setVolume(v); };
+  window.gmodPause     = function ()  { if (ready && player) player.pauseVideo(); };
+  window.gmodPlay      = function ()  { if (ready && player) player.playVideo(); };
+  window.gmodLoad      = function (id){ if (ready && player) player.loadVideoById(id); };
+</script>
+</body>
+</html>
