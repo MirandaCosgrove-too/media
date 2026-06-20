@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>DT Media Player</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #000; overflow: hidden; width: 100%; height: 100%; }
+  video { width: 100vw; height: 100vh; object-fit: contain; display: block; }
+</style>
+</head>
+<body>
+<video id="v" autoplay playsinline></video>
+<script>
+  function qp(name) {
+    var m = location.search.match(new RegExp('[?&]' + name + '=([^&]+)'));
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  var srcURL   = qp('src')   || '';
+  var startVol = parseInt(qp('vol')   || '80', 10) / 100;
+  var startAt  = parseFloat(qp('start') || '0');
+
+  var vid = document.getElementById('v');
+  vid.volume = Math.max(0, Math.min(1, startVol));
+
+  if (srcURL) {
+    vid.src = srcURL;
+    vid.load();
+    if (startAt > 0) {
+      vid.addEventListener('loadedmetadata', function() {
+        vid.currentTime = startAt;
+      }, { once: true });
+    }
+    vid.play().catch(function() {});
+  }
+
+  vid.addEventListener('ended', function() {
+    if (window.gmod && window.gmod.ended) window.gmod.ended();
+  });
+
+  // Called from Lua via DHTML:QueueJavascript — mirrors the API in youtube.html.
+  window.gmodSetVolume = function(v) { vid.volume = Math.max(0, Math.min(1, v / 100)); };
+  window.gmodPause     = function()  { vid.pause(); };
+  window.gmodPlay      = function()  { vid.play().catch(function(){}); };
+  window.gmodLoad      = function(u) { vid.src = u; vid.load(); vid.play().catch(function(){}); };
+</script>
+</body>
+</html>
